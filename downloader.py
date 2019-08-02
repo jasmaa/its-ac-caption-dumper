@@ -26,8 +26,10 @@ def get_page_urls():
     return urls
 
 
-def get_content(urls, output_path, is_get_video=True, is_get_captions=True):
+def get_content(urls, output_path, is_get_video=True, is_get_audio=True, is_get_captions=True):
     """Download videos"""
+    
+    output_paths = []
     
     for url in urls:
         ids = []
@@ -39,6 +41,7 @@ def get_content(urls, output_path, is_get_video=True, is_get_captions=True):
 
         file_prefix = url.split('/')[-2]
         target_dir = os.path.join(output_path, file_prefix)
+        output_paths.append(target_dir)
         try:
             os.mkdir(target_dir)
         except FileExistsError:
@@ -69,9 +72,16 @@ def get_content(urls, output_path, is_get_video=True, is_get_captions=True):
                     if is_get_video:
                         for url_data in video_data['published_urls']:
                             if url_data['format'] == 'mp4':
-                                urllib.request.urlretrieve(url_data['embed_url'], os.path.join(output_path, page_title, f"{utils.removeDisallowedFilenameChars(video_data['def_title'])}.mp4"))
+                                urllib.request.urlretrieve(url_data['embed_url'], os.path.join(target_dir, f"{utils.removeDisallowedFilenameChars(video_data['def_title'])}.mp4"))
                                 break
-                        
+
+                    # Download audio
+                    if is_get_audio:
+                        for url_data in video_data['published_urls']:
+                            if url_data['format'] == 'mp3':
+                                urllib.request.urlretrieve(url_data['embed_url'], os.path.join(target_dir, f"{utils.removeDisallowedFilenameChars(video_data['def_title'])}.mp3"))
+                                break
+                    
                     # Download captions
                     if is_get_captions:
                         base_url = 'https://cbslocal-uploads.storage.googleapis.com/anv-captionupl/'
@@ -89,6 +99,4 @@ def get_content(urls, output_path, is_get_video=True, is_get_captions=True):
                 print("Could not retrieve video")
         print("---")
 
-
-if __name__ == "__main__":
-    get_content(get_page_urls(), './data', False, True)
+    return output_paths

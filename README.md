@@ -1,3 +1,6 @@
-# Sophist
+# It's Ac Caption Dumper
 
-WIP It's Ac transcriber
+Simple script to dump It's Academic captions for packet transcription
+
+## Usage
+    python main.py
