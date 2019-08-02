@@ -4,6 +4,7 @@ import re
 import json
 import os
 
+import utils
 
 def get_page_urls():
     """Crawls for video urls"""
@@ -35,8 +36,9 @@ def get_content(urls, output_path, is_get_video=True, is_get_captions=True):
         
         page_title = soup.title.get_text()
         print(page_title)
-        
-        target_dir = os.path.join(output_path, url.split('/')[-2])
+
+        file_prefix = url.split('/')[-2]
+        target_dir = os.path.join(output_path, file_prefix)
         try:
             os.mkdir(target_dir)
         except FileExistsError:
@@ -67,19 +69,20 @@ def get_content(urls, output_path, is_get_video=True, is_get_captions=True):
                     if is_get_video:
                         for url_data in video_data['published_urls']:
                             if url_data['format'] == 'mp4':
-                                urllib.request.urlretrieve(url_data['embed_url'], os.path.join(output_path, page_title, f"{video_data['def_title']}.mp4"))
+                                urllib.request.urlretrieve(url_data['embed_url'], os.path.join(output_path, page_title, f"{utils.removeDisallowedFilenameChars(video_data['def_title'])}.mp4"))
                                 break
                         
                     # Download captions
                     if is_get_captions:
                         base_url = 'https://cbslocal-uploads.storage.googleapis.com/anv-captionupl/'
                         caption_url_matcher = re.compile(r'[0-9A-F]+/[0-9A-F]+/[0-9A-F]+\.vtt')
+                        
                         for caption_data in video_data['captions']:
                             caption_url = caption_url_matcher.findall(caption_data['url'])
                             if caption_url:
                                 urllib.request.urlretrieve(
                                     os.path.join(base_url, caption_url[0]),
-                                    os.path.join(target_dir, f"{video_data['def_title']}.vtt")
+                                    os.path.join(target_dir, f"{utils.removeDisallowedFilenameChars(video_data['def_title'])}.vtt")
                                 )
                     
             except urllib.error.HTTPError as e:
